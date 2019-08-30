@@ -2,7 +2,7 @@
 local rotationType = require "game.rotation_type"
 local color = require "graphics.color"
 
-function pack(r,g,b)
+local function pack(r,g,b)
   return {r,g,b}
 end
 

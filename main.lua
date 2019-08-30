@@ -8,11 +8,9 @@ local monolith = require('monolith.core')
 local shutdownkey = require "util.shutdownkey":new(monolith.input)
 local musicSystem
 
-
-
 local game
 
-function getInputSettings()
+local function getInputSettings()
   if require "util.osname" == "Linux" then
     return require "config.linux_input_settings"
   else

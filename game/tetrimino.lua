@@ -5,7 +5,7 @@ local Block = require "game.block"
 
 local rotationType = require "game.rotation_type"
 
-function rotateLeft(board)
+local function rotateLeft(board)
     local s = board.w
     local newBoard = Board:new(s, s)
     for x=1, s do
@@ -16,7 +16,7 @@ function rotateLeft(board)
     return newBoard
 end
 
-function rotateRight(board)
+local function rotateRight(board)
   local s = board.w
   local newBoard = Board:new(s, s)
   for x=1, s do
