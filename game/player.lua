@@ -8,11 +8,13 @@ local Timer = require "util.timer"
 local RepeatInput = require "game.util.repeat_input"
 
 
-
 local quads = require "game.util.quads"
 
 local image = love.graphics.newImage("assets/stock.png")
 local sprites = quads(image, 21, 8)
+
+local blockImage = love.graphics.newImage("assets/block4x4.png")
+local blockSprites = quads(blockImage, 4, 4)
 
 local obstacleBlock = require "game.block":new({0.5,0.5,0.5}, 8)
 
@@ -21,9 +23,9 @@ function Player:new(index, boardW, boardH, randoms, input, onDeleteLine)
   return setmetatable(
     {
       index=index,
+      randoms = randoms,
 
       board=Board:new(boardW, boardH),
-      randoms = randoms,
       onDeleteLine=onDeleteLine,
 
       randomIndex=1,
@@ -37,7 +39,7 @@ function Player:new(index, boardW, boardH, randoms, input, onDeleteLine)
       stockTetrimino=nil,
       nextTetrimino=nil,
 
-      obstacleLine=0,
+      obstacleLines={0, 0, 0, 0},
 
       input=input,
       leftKey=RepeatInput:new(input, index, "left", 0.2),
@@ -68,11 +70,15 @@ function Player:randomRange(min, max)
   return value
 end
 
+function Player:addObstacleLine(index, value)
+  self.obstacleLines[index] = self.obstacleLines[index] + value
+end
+
 function Player:reset()
   self.board:reset()
   self.x = nil
   self.y = nil
-  self.obstacleLine = 0
+  self.obstacleLines = {0, 0, 0, 0}
 
   self.tetrimino = nil
   self.stockTetrimino = nil
@@ -125,18 +131,27 @@ function Player:update(dt)
     end
 
     if deleteNum > 0 then
-      while self.obstacleLine > 0 and deleteNum > 0 do
-        deleteNum = deleteNum - 1
-        self.obstacleLine = self.obstacleLine - 1
-      end
-      if deleteNum > 0 then
-        onDeleteLine(self.index, deleteNum)
+      for i, obstacleLine in ipairs(self.obstacleLines) do
+        if i ~= self.index then
+          local del = deleteNum
+          while obstacleLine > 0 and del > 0 do
+            del = del - 1
+            self.obstacleLines[i] = self.obstacleLines[i] - 1
+          end
+          if del > 0 then
+            onDeleteLine(self.index, i, del)
+          end
+        end
       end
     end
-    while self.obstacleLine > 0 do
-      self.obstacleLine = self.obstacleLine - 1
-      self.board:insertObstacleRow()
-    end
+
+      for i, obstacleLine in ipairs(self.obstacleLines) do
+        while obstacleLine > 0 do
+          obstacleLine = obstacleLine - 1
+          self.board:insertObstacleRow()
+        end
+        self.obstacleLines[i] = 0
+      end
 
     self.tetrimino = self.nextTetrimino
     self.x = self.nextX
@@ -177,7 +192,7 @@ function Player:update(dt)
       self.falldownTimer:reset()
       if not self.board:hitTest(self.x, self.y - 1, self.tetrimino.board) then
         self.y = self.y - 1
-        self.visibleNext = self.y < self.board.h - 5
+        self.visibleNext = self.y < self.board.h - 4
       else
         self.board:merge(self.x, self.y, self.tetrimino.board)
         self.tetrimino = nil
@@ -213,29 +228,46 @@ function Player:update(dt)
 
 end
 
+local emptyColors = {
+  {0, 0, 0.5},
+  {0.5, 0, 0},
+  {0, 0.5, 0},
+  {0.5, 0, 0.5},
+}
 function Player:draw()
-  self.board:draw(1, 1, self.board.w, self.board.h, true, self.isDead, true)
+  self.board:draw(1, 1, self.board.w, self.board.h, emptyColors[self.index] , self.isDead)
 
   if self.visibleNext and self.nextTetrimino then
-    self.nextTetrimino.board:draw(self.nextX, self.nextY, self.board.w, self.board.h, false, self.isDead)
+    self.nextTetrimino.board:draw(self.nextX, self.nextY, self.board.w, self.board.h, nil, self.isDead)
   end
 
 
-  love.graphics.setColor(1, 1, 1)
-  love.graphics.draw(image, sprites[1], 30-3, 128 - 20-3)
+  love.graphics.setColor(emptyColors[self.index])
+  love.graphics.rectangle("line", 4*10 - 1, 128 - 4 * 19 -1, 4*4+2, 4*4+2)
+  --love.graphics.setColor(1, 1, 1)
+  --love.graphics.draw(image, sprites[1], 4*10, 128 - 4 * 22)
   if self.stockTetrimino then
-    self.stockTetrimino.board:draw(-4, 2, self.board.w, self.board.h, false, self.isDead)
+    self.stockTetrimino.board:draw(11, 16, self.board.w, self.board.h, nil, self.isDead)
   end
 
   if self.tetrimino then
-    self.tetrimino.board:draw(self.x, self.y, self.board.w, self.board.h, false, self.isDead)
+    local distanceY = math.floor(math.max(0, self.falldownTimer.now / self.falldownTimer.time * 4 - 2))
+    self.tetrimino.board:draw(self.x, self.y, self.board.w, self.board.h, nil, self.isDead, distanceY)
   end
 
   love.graphics.push()
-  love.graphics.setColor(0.5, 0.5, 0.5)
+  love.graphics.setColor(1, 1, 1)
   if not self.isDead then
-    for i=1, self.obstacleLine do
-      obstacleBlock:draw(79, 128 - i*3, self.isDead)
+    local k = 1
+    for i, obstacleLine in ipairs(self.obstacleLines) do
+      -- body...
+      for _=1, obstacleLine do
+        if love.timer.getTime() % 0.2 < 0.1 then
+          love.graphics.draw(blockImage, blockSprites[12 + i], 4*10, 128 - k * 4)
+        end
+        --love.graphics.draw(blockImage, blockSprites[8], 4*11, 128 - k * 4)
+        k = k + 1
+      end
     end
   end
   love.graphics.pop()

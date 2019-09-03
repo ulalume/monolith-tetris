@@ -1,6 +1,6 @@
 local Player = require "game.player"
 local scene = {}
-local TImer = require "util.timer"
+local Timer = require "util.timer"
 
 function scene:new(monolith, musicSystem, activeControllers)
   return setmetatable(
@@ -9,30 +9,21 @@ function scene:new(monolith, musicSystem, activeControllers)
       monolith=monolith,
       activeControllers=activeControllers,
 
+
+      endingTimer=Timer:new(5),
       players={},
-      deleteLineNum=0,
     },
     {__index=self}
   )
 end
 
-function scene:onDeleteLine(index, deleteNum)
-  self.deleteLineNum = self.deleteLineNum + deleteNum
+local line = {0,1,2,4}
+function scene:onDeleteLine(fromIndex, toIndex, deleteNum)
   for _,player in ipairs(self.players) do
     player:speedUp()
   end
-
   if deleteNum <= 1 then return end
-
-  print("---", index, deleteNum)
-
-  local line = {0,1,2,4}
-  for _, player in ipairs(self.players) do
-    if index ~= player.index then
-      print("---", player.obstacleLine, deleteNum)
-      player.obstacleLine = player.obstacleLine + line[deleteNum]
-    end
-  end
+  self.players[toIndex]:addObstacleLine(fromIndex, line[deleteNum])
 end
 
 function scene:reset()
@@ -46,8 +37,8 @@ function scene:reset()
     randoms[i] = love.math.random()
   end
 
-  function onDeleteLine(index, deleteNum)
-    self:onDeleteLine(index, deleteNum)
+  function onDeleteLine(fromIndex, toIndex, deleteNum)
+    self:onDeleteLine(fromIndex, toIndex, deleteNum)
   end
 
   self.players = {}
@@ -56,13 +47,29 @@ function scene:reset()
       table.insert(self.players, Player:new(index, 10, 19, randoms, self.monolith.input, onDeleteLine))
     end
   end
-
-  self.deleteLineNum = 0
 end
 
 function scene:update(dt)
-  for _, player in ipairs(self.players) do
+  local playerLive = 0
+  local livePlayerIndex
+  for index, player in ipairs(self.players) do
     player:update(dt)
+    if not player.isDead then
+      playerLive = playerLive + 1
+      livePlayerIndex = index
+    end
+  end
+
+  if playerLive == 1 then
+    self.livePlayerIndex = livePlayerIndex
+  else
+    self.livePlayerIndex = nil
+  end
+
+  if playerLive <= 1 then
+    if self.endingTimer:executable(dt) then
+      love.event.quit()
+    end
   end
 end
 
@@ -72,7 +79,18 @@ function scene:draw()
   for _, player in ipairs(self.players) do
     rotateScreen:beginDraw(rs[player.index])
     player:draw()
+
     rotateScreen:endDraw()
+  end
+  if self.livePlayerIndex ~= nil then
+    for _, player in ipairs(self.players) do
+      if self.livePlayerIndex == player.index then
+        rotateScreen:beginDraw(rs[player.index])
+        require "game.draw_win"(40-16, 128)
+        rotateScreen:endDraw()
+        break
+      end
+    end
   end
 end
 

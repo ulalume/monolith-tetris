@@ -113,18 +113,15 @@ function Board:hitTest(x, y, board)
   return false
 end
 
-function Board:draw(x, y, boardW, boardH, needEmpty, gameover, cut)
-
+function Board:draw(x, y, boardW, boardH, emptyColor, gameover, screenPositionY)
+  screenPositionY = screenPositionY or 0
   if needEmpty == nil then needEmpty = false end
 
   local h = self.h
-  if cut then
-    h = h-4
-  end
 
-  local cellSize = 3
-  local pixelFirstX = (x - 1) * cellSize + (128 - boardW * cellSize) / 2
-  local pixelFirstY = (boardH - 1) * cellSize - (y - 1) * cellSize + 128 - boardH * cellSize
+  local cellSize = 4
+  local pixelFirstX = (x - 1) * cellSize--+ (128 - boardW * cellSize) / 2
+  local pixelFirstY = (boardH - 1) * cellSize - (y - 1) * cellSize + 128 - boardH * cellSize + screenPositionY
 
   local pixels = {}
   for x2=1, self.w do
@@ -138,10 +135,10 @@ function Board:draw(x, y, boardW, boardH, needEmpty, gameover, cut)
   end
 
   love.graphics.push()
-  if needEmpty then
+  if emptyColor ~= nil then
     for x2=1, self.w do
       for y2=1, h do
-        love.graphics.setColor(0.0, 0.0, 0.5)
+        love.graphics.setColor(unpack(emptyColor))
         love.graphics.rectangle("fill", pixels[x2][y2][1] + 1, pixels[x2][y2][2] + 1, 1, 1)
       end
     end

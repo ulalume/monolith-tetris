@@ -1,8 +1,8 @@
 local quads = require "game.util.quads"
 local Block = {}
 
-local image = love.graphics.newImage("assets/block.png")
-local sprites = quads(image, 3, 3)
+local image = love.graphics.newImage("assets/block4x4.png")
+local sprites = quads(image, 4, 4)
 
 function Block:new(color, spriteIndex)
   return setmetatable({color=color, spriteIndex=spriteIndex}, {__index=self})
