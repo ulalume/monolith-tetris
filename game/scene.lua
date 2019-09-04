@@ -89,7 +89,8 @@ function scene:draw()
     for _, player in ipairs(self.players) do
       if self.livePlayerIndex == player.index then
         rotateScreen:beginDraw(rs[player.index])
-        require "game.draw_win"(40-16, 128 - 4 * 18)
+        --require "game.draw_win"(40-16, 128 - 4 * 18)
+        require "game.draw_win"(128/2, 128)
         rotateScreen:endDraw()
         break
       end
