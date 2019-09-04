@@ -19,11 +19,15 @@ end
 
 local line = {0,1,2,4}
 function scene:onDeleteLine(fromIndex, toIndex, deleteNum)
-  for _,player in ipairs(self.players) do
+  local toPlayer
+  for _, player in ipairs(self.players) do
     player:speedUp()
+    if player.index == toIndex then
+      toPlayer = player
+    end
   end
-  if deleteNum <= 1 then return end
-  self.players[toIndex]:addObstacleLine(fromIndex, line[deleteNum])
+  if deleteNum <= 1 or toPlayer == nil then return end
+  toPlayer:addObstacleLine(fromIndex, line[deleteNum])
 end
 
 function scene:reset()

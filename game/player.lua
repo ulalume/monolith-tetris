@@ -235,24 +235,26 @@ local emptyColors = {
   {0.5, 0, 0.5},
 }
 function Player:draw()
-  self.board:draw(1, 1, self.board.w, self.board.h, emptyColors[self.index] , self.isDead)
+  local dx, dy = 1, -1
+
+  self.board:draw(1, 1, self.board.w, self.board.h, emptyColors[self.index] , self.isDead, dx, dy)
 
   if self.visibleNext and self.nextTetrimino then
-    self.nextTetrimino.board:draw(self.nextX, self.nextY, self.board.w, self.board.h, nil, self.isDead)
+    self.nextTetrimino.board:draw(self.nextX, self.nextY, self.board.w, self.board.h, nil, self.isDead, dx, dy)
   end
 
 
   love.graphics.setColor(emptyColors[self.index])
-  love.graphics.rectangle("line", 4*10 - 1, 128 - 4 * 19 -1, 4*4+2, 4*4+2)
-  --love.graphics.setColor(1, 1, 1)
-  --love.graphics.draw(image, sprites[1], 4*10, 128 - 4 * 22)
+  love.graphics.draw(image, sprites[3], 4 * 10 - 2 +dx, 128 - 4 * 19 - 3 + dy)
+  love.graphics.line(0, 128-0.5, 128, 128-0.5)
+
   if self.stockTetrimino then
-    self.stockTetrimino.board:draw(11, 16, self.board.w, self.board.h, nil, self.isDead)
+    self.stockTetrimino.board:draw(11, 16, self.board.w, self.board.h, nil, self.isDead, dx, dy)
   end
 
   if self.tetrimino then
     local distanceY = math.floor(math.max(0, self.falldownTimer.now / self.falldownTimer.time * 4 - 2))
-    self.tetrimino.board:draw(self.x, self.y, self.board.w, self.board.h, nil, self.isDead, distanceY)
+    self.tetrimino.board:draw(self.x, self.y, self.board.w, self.board.h, nil, self.isDead, dx, dy + distanceY)
   end
 
   love.graphics.push()
@@ -263,9 +265,8 @@ function Player:draw()
       -- body...
       for _=1, obstacleLine do
         if love.timer.getTime() % 0.2 < 0.1 then
-          love.graphics.draw(blockImage, blockSprites[12 + i], 4*10, 128 - k * 4)
+          love.graphics.draw(blockImage, blockSprites[12 + i], 4*10 + dx, 128 - k * 4 + dy)
         end
-        --love.graphics.draw(blockImage, blockSprites[8], 4*11, 128 - k * 4)
         k = k + 1
       end
     end

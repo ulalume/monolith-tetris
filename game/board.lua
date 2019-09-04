@@ -113,14 +113,15 @@ function Board:hitTest(x, y, board)
   return false
 end
 
-function Board:draw(x, y, boardW, boardH, emptyColor, gameover, screenPositionY)
+function Board:draw(x, y, boardW, boardH, emptyColor, gameover, screenPositionX, screenPositionY)
+  screenPositionX = screenPositionX or 0
   screenPositionY = screenPositionY or 0
   if needEmpty == nil then needEmpty = false end
 
   local h = self.h
 
   local cellSize = 4
-  local pixelFirstX = (x - 1) * cellSize--+ (128 - boardW * cellSize) / 2
+  local pixelFirstX = (x - 1) * cellSize + screenPositionX--+ (128 - boardW * cellSize) / 2
   local pixelFirstY = (boardH - 1) * cellSize - (y - 1) * cellSize + 128 - boardH * cellSize + screenPositionY
 
   local pixels = {}
