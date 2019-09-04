@@ -52,11 +52,11 @@ end
 function scene:update(dt)
   local playerLive = 0
   local livePlayerIndex
-  for index, player in ipairs(self.players) do
+  for _, player in ipairs(self.players) do
     player:update(dt)
     if not player.isDead then
       playerLive = playerLive + 1
-      livePlayerIndex = index
+      livePlayerIndex = player.index
     end
   end
 
@@ -74,19 +74,18 @@ function scene:update(dt)
 end
 
 local rotateScreen = require "graphics.rotate_screen":new(128, 128)
-local rs = {0,math.pi,math.pi/2*3,math.pi/2}
+local rs = {0, math.pi, math.pi/2*3, math.pi/2}
 function scene:draw()
   for _, player in ipairs(self.players) do
     rotateScreen:beginDraw(rs[player.index])
     player:draw()
-
     rotateScreen:endDraw()
   end
   if self.livePlayerIndex ~= nil then
     for _, player in ipairs(self.players) do
       if self.livePlayerIndex == player.index then
         rotateScreen:beginDraw(rs[player.index])
-        require "game.draw_win"(40-16, 128)
+        require "game.draw_win"(40-16, 128 - 4 * 18)
         rotateScreen:endDraw()
         break
       end
